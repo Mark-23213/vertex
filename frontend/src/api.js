@@ -1,3 +1,4 @@
+const API_BASE_URL = 'https://vertex-aaly.onrender.com';
 const TOKEN_KEY = "vertex_token";
 const USER_KEY = "vertex_user";
 
@@ -29,13 +30,11 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
     const token = getToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
-
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
-
   if (res.status === 401) {
     clearSession();
     if (!window.location.pathname.startsWith("/login")) {
@@ -43,7 +42,6 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
     }
     throw new Error("Сессия истекла. Войдите снова.");
   }
-
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     throw new Error(data?.detail || "Произошла ошибка запроса");
