@@ -48,7 +48,7 @@ def get_current_user(authorization: Optional[str] = Header(None), db: Session = 
 
 # ==================== AUTH ====================
 
-@app.post("/api/auth/register")
+@app.post("/auth/register")
 def register(data: UserRegister, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -63,7 +63,7 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.id})
     return {"access_token": token, "token_type": "bearer", "user": {"id": user.id, "email": user.email, "name": user.name}}
 
-@app.post("/api/auth/login")
+@app.post("/auth/login")
 def login(data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
@@ -71,12 +71,12 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.id})
     return {"access_token": token, "token_type": "bearer", "user": {"id": user.id, "email": user.email, "name": user.name}}
 
-@app.get("/api/auth/me")
+@app.get("/auth/me")
 def me(current_user: User = Depends(get_current_user)):
     return {"id": current_user.id, "email": current_user.email, "name": current_user.name,
             "phone": current_user.phone, "city": current_user.city, "experience": current_user.experience, "about": current_user.about}
 
-@app.put("/api/auth/me")
+@app.put("/auth/me")
 def update_me(data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     for field in ["name", "phone", "city", "experience", "about"]:
         if field in data:
@@ -86,11 +86,11 @@ def update_me(data: dict, db: Session = Depends(get_db), current_user: User = De
 
 # ==================== EXPEDITIONS ====================
 
-@app.get("/api/expeditions")
+@app.get("/expeditions")
 def get_expeditions(db: Session = Depends(get_db)):
     return db.query(Expedition).all()
 
-@app.get("/api/expeditions/{expedition_id}")
+@app.get("/expeditions/{expedition_id}")
 def get_expedition(expedition_id: str, db: Session = Depends(get_db)):
     exp = db.query(Expedition).filter(Expedition.id == expedition_id).first()
     if not exp:
@@ -99,7 +99,7 @@ def get_expedition(expedition_id: str, db: Session = Depends(get_db)):
 
 # ==================== BOOKINGS ====================
 
-@app.post("/api/bookings")
+@app.post("/bookings")
 def create_booking(data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     booking = Booking(
         expedition_id=data.get("expedition_id"),
@@ -115,18 +115,18 @@ def create_booking(data: dict, db: Session = Depends(get_db), current_user: User
     db.refresh(booking)
     return {"ok": True, "id": booking.id}
 
-@app.get("/api/bookings")
+@app.get("/bookings")
 def get_my_bookings(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return db.query(Booking).filter(Booking.user_id == current_user.id).all()
 
 # ==================== FAVORITES ====================
 
-@app.get("/api/favorites")
+@app.get("/favorites")
 def get_favorites(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     favs = db.query(Favorite).filter(Favorite.user_id == current_user.id).all()
     return [f.expedition_id for f in favs]
 
-@app.post("/api/favorites/{expedition_id}")
+@app.post("/favorites/{expedition_id}")
 def add_favorite(expedition_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     existing = db.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.expedition_id == expedition_id).first()
     if existing:
@@ -136,7 +136,7 @@ def add_favorite(expedition_id: str, db: Session = Depends(get_db), current_user
     db.commit()
     return {"ok": True}
 
-@app.delete("/api/favorites/{expedition_id}")
+@app.delete("/favorites/{expedition_id}")
 def remove_favorite(expedition_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     db.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.expedition_id == expedition_id).delete()
     db.commit()
@@ -144,7 +144,7 @@ def remove_favorite(expedition_id: str, db: Session = Depends(get_db), current_u
 
 # ==================== SUPPORT ====================
 
-@app.post("/api/support")
+@app.post("/support")
 def send_support(data: dict, db: Session = Depends(get_db)):
     msg = SupportMessage(
         user_id=data.get("user_id"),
