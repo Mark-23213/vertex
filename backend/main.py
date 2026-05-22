@@ -14,12 +14,16 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Vertex API")
 
-# CORS
-FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+# CORS — принимаем несколько origins через запятую в FRONTEND_ORIGIN
+_raw_origins = os.getenv("FRONTEND_ORIGIN", "")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()] + [
+    "http://localhost:5173",
+    "http://localhost:4173",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN, "http://localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
