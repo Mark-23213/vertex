@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://vertex-aaly.onrender.com';
+const API_BASE_URL = 'https://vertex-production-a108.up.railway.app';
 const TOKEN_KEY = "vertex_token";
 const USER_KEY = "vertex_user";
 
